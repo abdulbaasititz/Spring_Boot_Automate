@@ -1,10 +1,10 @@
-ID int Unchecked id
-VARIANT_ID varchar(50) Unchecked variantId
-PRODUCT_ID varchar(50) Checked productId
-SKU varchar(100) Checked sku
-INVENTORY_ID varchar(50) Checked inventoryId
-PLANT varchar(20) Unchecked plant
-CRAT varchar(20) Checked crAt
-CRBY varchar(30) Checked crBy
-UPAT varchar(20) Checked upAt
-UPBY varchar(30) Checked upBy
+PLANT varchar(20) Unchecked plant 1
+ID_REMARKS int Unchecked idRemarks 0
+DONO varchar(50) Unchecked doNo 1
+DOLNNO int Unchecked doLnNo 1
+ITEM varchar(50) Unchecked item 1
+REMARKS varchar(100) Checked remarks 1
+CRAT varchar(20) Checked crAt 0
+CRBY varchar(30) Checked crBy 0
+UPAT varchar(20) Checked upAt 0
+UPBY varchar(30) Checked upBy 0

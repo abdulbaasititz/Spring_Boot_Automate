@@ -1,8 +1,10 @@
 print("convert table into spring boot model")
-
-projectName = "inventory"
-tableName = "SHOPIFY_ITEM"
-className = "ShopifyItem"
+# input
+#--------------------------------------
+projectName = "uclo.inventory"
+tableName = "DODET_REMARKS"
+className = "DoDetRemarks"
+#--------------------------------------
 seperator = " "
 getData = open('GetData', 'r')
 writeData = open("output/"+className+".java", 'w+')
