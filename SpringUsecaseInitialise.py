@@ -5,14 +5,17 @@ print("Create a controller , service & repo ")
 
 # input to set the controller,service and model name
 projectName = "uclo.inventory"
-tableName = "DODET"
-modelName = "DoDet"
-className = "DoDet"
-baseName = "doDet"
-folderName = "do_det"
-#primaryKey = "DoNoAndDoLineNo"
-pk = ["DoNo","DoLineNo"]
-pkType = ["String","int"]
+#tableName = "SHOPIFY_ITEM"
+# it should be same name which create in model folder
+modelName = "TableControl"
+# common name for all cntrl,service
+className = "TableControl"
+# object name for class
+baseName = "tableControl"
+folderName = "table_control"
+#first letter caps same like model alies name
+pk = ["Plant","Func"]
+pkType = ["String","String"]
 createdBy = "abdul"
 valSet = ""
 
@@ -20,6 +23,20 @@ valSet = ""
 path = os.path.join(parent_dir, folderName)
 os.mkdir(path)
 print(path)
+
+def serviceNameForPkFindBy(getPrefix, getSuffix):
+    valSet = ""
+    i=0
+    if getPrefix != "":
+        for pkVal in pk:
+            valSet = valSet + pkVal + getPrefix
+        valSet = valSet[:-3]
+    valSet = valSet + "("
+    for pkTypeVal in pkType:
+        valSet = valSet + getSuffix + str(i) + ","
+        i = i+1
+    valSet = valSet[:-1] + ")"
+    return valSet
 
 def serviceNameForPk(getPrefix, getSuffix):
     valSet = ""
@@ -100,22 +117,32 @@ writeData.write("public class " + className + "Service {\n")
 writeData.write("\t@Autowired\n")
 writeData.write("\t" + className + "Repository " + baseName + "Repository;\n")
 # function to check the primary key
-writeData.write("\tpublic String check" + modelName + "Pk"+ serviceNameForPk(" ","val")+" throws Exception {\n")
+writeData.write("\tpublic String check" + modelName + "Pk"+ serviceNameForPk("","pk")+" throws Exception {\n")
 writeData.write("\t\ttry {\n")
-writeData.write("\t\t\t" + modelName + " getVal = " + baseName + "Repository.findBy" + serviceNameForPk("And","pk")+";\n")
+writeData.write("\t\t\t" + modelName + " getVal = " + baseName + "Repository.findBy" + serviceNameForPkFindBy("And","pk")+";\n")
 writeData.write("\t\t\tif(getVal == null)\n")
 writeData.write("\t\t\t\treturn \"1\";\n")
 writeData.write("\t\t} catch (Exception e) {\n")
-writeData.write("\t\t\tthrow new Exception(\"SQL Error!!!\");\n")
+writeData.write("\t\t\tthrow new Exception(e.getMessage());\n")
 writeData.write("\t\t}\n")
-writeData.write("\treturn \"0\";\n")
-writeData.write("\t}\n")
+writeData.write("\t\treturn \"0\";\n")
+writeData.write("\t}\n\n")
+# function to get value using primary key
+writeData.write("\tpublic " + modelName + " get" + modelName + "Pk"+ serviceNameForPk("","pk")+" throws Exception {\n")
+writeData.write("\t\t" + modelName + " getVal;\n")
+writeData.write("\t\ttry {\n")
+writeData.write("\t\t\tgetVal = " + baseName + "Repository.findBy" + serviceNameForPkFindBy("And","pk")+";\n")
+writeData.write("\t\t} catch (Exception e) {\n")
+writeData.write("\t\t\tthrow new Exception(e.getMessage());\n")
+writeData.write("\t\t}\n")
+writeData.write("\t\treturn getVal;\n")
+writeData.write("\t}\n\n")
 # function to save the model
 writeData.write("\tpublic String set" + modelName + "Details(" + modelName + " val) throws Exception {\n")
 writeData.write("\t\ttry {\n")
 writeData.write("\t\t\t" + baseName + "Repository.save(val);\n")
 writeData.write("\t\t} catch (Exception e) {\n")
-writeData.write("\t\t\tthrow new Exception(\"SQL Error!!!\");\n")
+writeData.write("\t\t\tthrow new Exception(e.getMessage());\n")
 writeData.write("\t\t}\n")
 writeData.write("\t\treturn \"1\";\n")
 writeData.write("\t}\n")

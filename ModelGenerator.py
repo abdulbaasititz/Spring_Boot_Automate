@@ -2,8 +2,10 @@ print("convert table into spring boot model")
 # input
 #--------------------------------------
 projectName = "uclo.inventory"
-tableName = "DODET_REMARKS"
-className = "DoDetRemarks"
+tableName = "TBLCONTROL"
+className = "TableControl"
+# if plant name in db means mention 1 eg:(plant_table name) else 0
+plantName = 1
 #--------------------------------------
 seperator = " "
 getData = open('GetData', 'r')
@@ -13,7 +15,10 @@ print(lines[0])
 idSet = 0
 writeData.write("package com."+projectName+".persistence.models;\n")
 writeData.write("import lombok.Getter;\nimport lombok.Setter;\nimport javax.persistence.*;\n\n")
-writeData.write("@Entity @Table(name=\"##plant##"+tableName+"\") \n")
+if plantName == 1 :
+    writeData.write("@Entity @Table(name=\"##plant##"+tableName+"\") \n")
+else :
+    writeData.write("@Entity @Table(name=\"" + tableName + "\") \n")
 writeData.write("@Getter @Setter\n")
 writeData.write("public class "+className+" {\n")
 for line in lines:

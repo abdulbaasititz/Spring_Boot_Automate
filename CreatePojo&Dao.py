@@ -6,7 +6,7 @@ parent_dir = "E:/pycharm/spring-boot-automation/output"
 
 # input to set the controller,service and model name
 projectName = "uclo.inventory"
-tableName = "DODET"
+tableName = "DODET_REMARKS"
 modelName = "DoDet"
 className = "DoDetInfo"
 baseName = "doDetInfo"
