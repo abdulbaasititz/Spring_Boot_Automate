@@ -5,17 +5,18 @@ print("Create a controller , service & repo ")
 
 # input to set the controller,service and model name
 projectName = "uclo.inventory"
-#tableName = "SHOPIFY_ITEM"
+# tableName = "SHOPIFY_ITEM"
 # it should be same name which create in model folder
-modelName = "TableControl"
+modelName = "InvMst"
 # common name for all cntrl,service
-className = "TableControl"
+className = "InvMst"
 # object name for class
-baseName = "tableControl"
-folderName = "table_control"
-#first letter caps same like model alies name
-pk = ["Plant","Func"]
-pkType = ["String","String"]
+baseName = "invMst"
+folderName = "inventory_master"
+# first letter caps same like model alies name
+pk1 = ["Id","Item","Location","UserFieldFour"]
+pkType1 = ["Integer","String","String","String"]
+methodPk = [{"Id": "Integer", "Item": "String"}, {"Location": "String", "UserFieldFour": "String"}]
 createdBy = "abdul"
 valSet = ""
 
@@ -24,9 +25,10 @@ path = os.path.join(parent_dir, folderName)
 os.mkdir(path)
 print(path)
 
-def serviceNameForPkFindBy(getPrefix, getSuffix):
+# "AND" , "PK"
+def serviceNameForPkFindBy(getPrefix, getSuffix,pk,pkType):
     valSet = ""
-    i=0
+    i = 0
     if getPrefix != "":
         for pkVal in pk:
             valSet = valSet + pkVal + getPrefix
@@ -34,26 +36,28 @@ def serviceNameForPkFindBy(getPrefix, getSuffix):
     valSet = valSet + "("
     for pkTypeVal in pkType:
         valSet = valSet + getSuffix + str(i) + ","
-        i = i+1
+        i = i + 1
     valSet = valSet[:-1] + ")"
     return valSet
 
-def serviceNameForPk(getPrefix, getSuffix):
+
+def serviceNameForPk(getPrefix, getSuffix,pk,pkType):
     valSet = ""
-    i=0
+    i = 0
     if getPrefix != "":
         for pkVal in pk:
             valSet = valSet + pkVal + getPrefix
         valSet = valSet[:-3]
     valSet = valSet + "("
     for pkTypeVal in pkType:
-        valSet = valSet + pkTypeVal+" "+getSuffix + str(i) + ","
-        i = i+1
+        valSet = valSet + pkTypeVal + " " + getSuffix + str(i) + ","
+        i = i + 1
     valSet = valSet[:-1] + ")"
     return valSet
 
-def controllerPassValForPk (getPrefix , getSuffix):
-    valSet=""
+
+def controllerPassValForPk(getPrefix, getSuffix,pk,pkType):
+    valSet = ""
     for pkVal in pk:
         valSet = valSet + getPrefix + pkVal + getSuffix
     return valSet[:-1]
@@ -86,17 +90,18 @@ writeData.write("\t@RequestMapping(value = \"/set-" + baseName + "/new\", method
 writeData.write("\tpublic ResponseEntity<?> new" + baseName + "(HttpServletRequest request,")
 writeData.write("@RequestBody " + modelName + " val) throws Exception {\n")
 # Header information get
-writeData.write("\t\tClaimsDao claimsDao = claimsSet.getClaimsDetailsAfterSet(request.getHeader(\"Authorization\"));\n")
-writeData.write("\t\tString plant = claimsDao.getPlt();\n")
-writeData.write("\t\tString sub = claimsDao.getSub();\n")
-writeData.write("\t\tString empId = claimsDao.getEid();\n")
+# writeData.write("\t\tClaimsDao claimsDao = claimsSet.getClaimsDetailsAfterSet(request.getHeader(\"Authorization\"));\n")
+# writeData.write("\t\tString plant = claimsDao.getPlt();\n")
+# writeData.write("\t\tString sub = claimsDao.getSub();\n")
+# writeData.write("\t\tString empId = claimsDao.getEid();\n")
 writeData.write("\t\tDateTimeCalc dateTimeCalc = new DateTimeCalc();\n")
 writeData.write("\t\tString createdAt = dateTimeCalc.getUcloTodayDateTime();\n")
 writeData.write("\t\tString createdBy = \"" + createdBy + "\";\n")
 # to check primary key existing in db
-writeData.write(
-    "\t\tString status = " + baseName + "Service.check" + modelName + "Pk(" + controllerPassValForPk("val.get","(),")+");\n")
-writeData.write("\t\tif(status == \"1\"){\n")
+for pkDet in methodPk :
+    writeData.write("\t\tString status = " + baseName + "Service.check" + modelName
+                    + "Pk(" + controllerPassValForPk("val.get","(),",list(pkDet.keys()),list(pkDet.values())) + ");\n")
+writeData.write("\t\tif(status.equals(\"1\")){\n")
 # if not save the value
 writeData.write("\t\t\t" + baseName + "Service.set" + modelName + "Details(val);\n")
 writeData.write("\t\t}else{\n")
@@ -116,27 +121,31 @@ writeData.write("@Service\n")
 writeData.write("public class " + className + "Service {\n")
 writeData.write("\t@Autowired\n")
 writeData.write("\t" + className + "Repository " + baseName + "Repository;\n")
-# function to check the primary key
-writeData.write("\tpublic String check" + modelName + "Pk"+ serviceNameForPk("","pk")+" throws Exception {\n")
-writeData.write("\t\ttry {\n")
-writeData.write("\t\t\t" + modelName + " getVal = " + baseName + "Repository.findBy" + serviceNameForPkFindBy("And","pk")+";\n")
-writeData.write("\t\t\tif(getVal == null)\n")
-writeData.write("\t\t\t\treturn \"1\";\n")
-writeData.write("\t\t} catch (Exception e) {\n")
-writeData.write("\t\t\tthrow new Exception(e.getMessage());\n")
-writeData.write("\t\t}\n")
-writeData.write("\t\treturn \"0\";\n")
-writeData.write("\t}\n\n")
+for pkDet in methodPk :
+    # function to check the primary key
+    writeData.write("\tpublic String check" + modelName + "Pk" + serviceNameForPk("", "pk",list(pkDet.keys()),list(pkDet.values())) + " throws Exception {\n")
+    writeData.write("\t\ttry {\n")
+    writeData.write(
+        "\t\t\t" + modelName + " getVal = " + baseName + "Repository.findBy" + serviceNameForPkFindBy("And", "pk",list(pkDet.keys()),list(pkDet.values())) + ";\n")
+    writeData.write("\t\t\tif(getVal == null)\n")
+    writeData.write("\t\t\t\treturn \"1\";\n")
+    writeData.write("\t\t} catch (Exception e) {\n")
+    writeData.write("\t\t\tthrow new Exception(e.getMessage());\n")
+    writeData.write("\t\t}\n")
+    writeData.write("\t\treturn \"0\";\n")
+    writeData.write("\t}\n\n")
 # function to get value using primary key
-writeData.write("\tpublic " + modelName + " get" + modelName + "Pk"+ serviceNameForPk("","pk")+" throws Exception {\n")
-writeData.write("\t\t" + modelName + " getVal;\n")
-writeData.write("\t\ttry {\n")
-writeData.write("\t\t\tgetVal = " + baseName + "Repository.findBy" + serviceNameForPkFindBy("And","pk")+";\n")
-writeData.write("\t\t} catch (Exception e) {\n")
-writeData.write("\t\t\tthrow new Exception(e.getMessage());\n")
-writeData.write("\t\t}\n")
-writeData.write("\t\treturn getVal;\n")
-writeData.write("\t}\n\n")
+for pkDet in methodPk :
+    writeData.write(
+        "\tpublic " + modelName + " get" + modelName + "Pk" + serviceNameForPk("", "pk",list(pkDet.keys()),list(pkDet.values())) + " throws Exception {\n")
+    writeData.write("\t\t" + modelName + " getVal;\n")
+    writeData.write("\t\ttry {\n")
+    writeData.write("\t\t\tgetVal = " + baseName + "Repository.findBy" + serviceNameForPkFindBy("And", "pk",list(pkDet.keys()),list(pkDet.values())) + ";\n")
+    writeData.write("\t\t} catch (Exception e) {\n")
+    writeData.write("\t\t\tthrow new Exception(e.getMessage());\n")
+    writeData.write("\t\t}\n")
+    writeData.write("\t\treturn getVal;\n")
+    writeData.write("\t}\n\n")
 # function to save the model
 writeData.write("\tpublic String set" + modelName + "Details(" + modelName + " val) throws Exception {\n")
 writeData.write("\t\ttry {\n")
@@ -157,5 +166,6 @@ writeData.write("import org.springframework.stereotype.Repository;\n\n")
 writeData.write("@Repository\n")
 writeData.write("public interface " + className + "Repository extends JpaRepository<" + modelName + ",Long> {\n")
 # function to check the primary key
-writeData.write("\t" + modelName + " findBy" + serviceNameForPk("And", "pk")+";\n")
+for pkDet in methodPk :
+    writeData.write("\t" + modelName + " findBy" + serviceNameForPk("And", "pk",list(pkDet.keys()),list(pkDet.values())) + ";\n")
 writeData.write("}\n")
