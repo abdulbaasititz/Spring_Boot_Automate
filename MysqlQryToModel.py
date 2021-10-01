@@ -1,9 +1,18 @@
 #Convert query to model
 #--------------------------------------
 projectName = "itz.scs"
-tableName = ""
-className = ""
+tableName = "UserMaster"
 
+# it should be same name which create in model folder
+modelName = "CarCylinder"
+# common name for all cntrl,service
+className = "CarCylinder"
+# object name for class
+baseName = "CarCylinder"
+folderName = "car_cylinder"
+# Generate Pk to set,get data in db
+methodPk = [{"Id": "Integer","Name": "String"}]
+createdBy = "Abdul Baasit"
 #--------------------------------------
 file = open("GetData", "r")
 name = []
@@ -43,7 +52,6 @@ for line in file:
 print("tablename :"+tableName)
 print(columnName)
 print(columnType)
-className = tableName
 file.close()
 i=0
 print("convert get data into spring boot model")
