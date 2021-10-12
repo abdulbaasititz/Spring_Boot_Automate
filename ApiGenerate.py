@@ -1,18 +1,18 @@
 #Convert query to model
 #--------------------------------------
 projectName = "itz.scs"
-tableName = "CarBrand"
+tableName = "TableButtonSchema"
 
 # it should be same name which create in model folder #- PascalCase
-modelName = "CarBrand"
+modelName = "TableButtonSchema"
 # common name for all cntrl,service - PascalCase
-className = "CarBrand"
+className = "TableButtonSchema"
 # object name for class camelCase
-baseName = "carBrand"
+baseName = "tableButtonSchema"
 # SHould be underscore snake_case
-folderName = "car_brand"
+folderName = "table_button_schema"
 # Generate Pk,FK,unique to set,get data in db
-methodPk = [{"Id": "Integer"},{"Name": "String"}]
+methodPk = [{"Id": "Integer"},{"PageMasterId": "Integer"}]
 createdBy = "Abdul Baasit"
 #--------------------------------------
 file = open("GetData", "r")

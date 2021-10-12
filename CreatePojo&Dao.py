@@ -5,12 +5,12 @@ print("convert dao into pojo for spring boot model")
 parent_dir = "E:/pycharm/spring-boot-automation/output"
 
 # input to set the controller,service and model name
-projectName = "uclo.inventory"
-tableName = "DODET_REMARKS"
-modelName = "DoDet"
-className = "DoDetInfo"
-baseName = "doDetInfo"
-folderName = "do_det_info"
+projectName = "uclo.poc"
+tableName = "UOM"
+modelName = "uomMaster"
+className = "uomMaster"
+baseName = "uomMaster"
+folderName = "uom_master"
 
 # Creating a new directory
 path = os.path.join(parent_dir, folderName)
