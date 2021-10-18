@@ -26,7 +26,7 @@ file = open("GetData", "r")
 name = []
 flag = 0
 check = ""
-get = ""
+get = 0
 
 columnName=[]
 columnType=[]
@@ -52,7 +52,7 @@ for line in file:
                 pk = fields[i + 4].rstrip(',();')
                 pk = pk.replace('(','')
                 break;
-        if get ==1:
+        if get == 1:
             if tableName == word:
                 toggle = 0
                 continue
@@ -73,6 +73,7 @@ print(columnName)
 print(columnType)
 file.close()
 i=0
+get = 0
 print("convert get data into spring boot model")
 seperator = " "
 writeData = open("output/"+className+".java", 'w+')
@@ -96,7 +97,7 @@ for name in columnName:
     #print(columnTypeCk)
     if columnTypeCk == "int" or columnTypeCk == "smallint" or columnTypeCk == "bigint":
         if idSet == 1:
-            writeData.write("\tprivate Integer " + ''.join([name[0].lower() + name[1:]]) + "=0;\n")
+            writeData.write("\tprivate Integer " + ''.join([name[0].lower() + name[1:]]) + " = 0;\n")
             idSet = 2
         else :
             writeData.write("\tprivate Integer " + ''.join([name[0].lower() + name[1:]]) + ";\n")
@@ -106,16 +107,24 @@ for name in columnName:
         writeData.write("\tprivate Float " + ''.join([name[0].lower() + name[1:]]) + ";\n")
     elif columnTypeCk == "double" or columnTypeCk == "amount":
         writeData.write("\tprivate Float " + ''.join([name[0].lower() + name[1:]]) + ";\n")
-    elif columnTypeCk == "date":
+    elif columnTypeCk == "date" :
         if (name != "CrAt" and name != "UpAt"):
             writeData.write("\tprivate Date " + ''.join([name[0].lower() + name[1:]]) + ";\n")
+    elif columnTypeCk == "timestamp" :
+        if (name != "CrAt" and name != "UpAt"):
+            writeData.write("\tprivate Timestamp " + ''.join([name[0].lower() + name[1:]]) + ";\n")
     else:
+        if (get == 0 and name == "CrBy"):
+            writeData.write("\tprivate String crBy = JwtUtil.usr;\n")
+            get = 1;i=i+1;
+            continue;
         writeData.write("\tprivate String "+''.join([name[0].lower()+name[1:]])+";\n")
     i=i+1;
 
 writeData.write("}")
 writeData.close()
 
+get=0
 i=0
 print("convert get data into spring boot idDao")
 seperator = " "
