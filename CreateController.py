@@ -14,7 +14,9 @@ folderName = "car_brand"
 # SHould be hipen snake_case
 apiName = "car-brand"
 # Generate Pk,FK,unique to set,get data in db
-methodPk = [{"Id": "Integer"},{"PageMasterId": "Integer"}]
+pk = {"Id": "Integer"}
+uk = {"Name": "String"}
+fk = [{"ItemId": "String","ItemSku": "String"},{"ItemId": "String","VariantId": "String"}]
 createdBy = "Abdul Baasit"
 #--------------------------------------
 
@@ -23,11 +25,18 @@ import os
 parent_dir = "E:/pycharm/spring-boot-automation/output"
 print("Create a controller , service & repo ")
 
-# creating a controller class
-# writeData = open(path + "/" + className + "Controller.java", 'w+')
-writeData = open("output/" + className + "Controller.java", 'w+')
-writeData.write("package com."+pn+".usecases."+folderName+";\n\n")
+path = os.path.join(parent_dir, folderName)
 
+if os.path.exists(path):
+   print("Folder is not empty")
+else:
+    os.mkdir(path)
+
+print(path)
+writeData = open(path + "/" + className + "Controller.java", 'w+')
+
+
+writeData.write("package com."+pn+".usecases."+folderName+";\n\n")
 writeData.write("import org.springframework.data.domain.Page;\nimport org.springframework.web.bind.annotation.*;\nimport org.springframework.beans.factory.annotation.Autowired;\n")
 writeData.write("import org.springframework.http.ResponseEntity;\nimport javax.servlet.http.HttpServletRequest;\nimport java.util.List;\n")
 writeData.write("import org.springframework.http.HttpStatus;\nimport org.modelmapper.ModelMapper;\nimport org.modelmapper.TypeToken;\n")
@@ -47,8 +56,8 @@ writeData.write("\tClaimsSet claimsSet;\n")
 writeData.write("\t@PostMapping(value =\"/"+apiName+"\")\n")
 writeData.write("\tpublic ResponseEntity<?> masterSet(HttpServletRequest request,@RequestBody "+className+"Dao getVal) throws Exception {\n")
 writeData.write("\t\tClaimsDao claimsDao = claimsSet.getClaimsDetailsAfterSet(request.getHeader(\"Authorization\"));\n")
-writeData.write("\t\tif(ser.getPk2(getVal.getName())!=null)\n")
-writeData.write("\t\t\tthrow new Exception(getVal.getName()+\" Value Already Set\");\n")
+writeData.write("\t\tif(ser.getPk2(getVal.get"+list(uk.keys())[0]+"())!=null)\n")
+writeData.write("\t\t\tthrow new Exception(getVal.get"+list(uk.keys())[0]+"()+\" Value Already Set\");\n")
 writeData.write("\t\tser.setData(new ModelMapper().map(getVal,"+modelName+".class));\n")
 writeData.write("\t\treturn new ResponseEntity<>(new ReportDao(\"Added Successfully\",true), HttpStatus.OK);\n")
 writeData.write("\t}\n")
@@ -56,24 +65,24 @@ writeData.write("\t}\n")
 writeData.write("\t@PutMapping(value =\"/"+apiName+"\")\n")
 writeData.write("\tpublic ResponseEntity<?> masterUpdate(HttpServletRequest request,@RequestBody "+className+"IdDao getVal) throws Exception {\n")
 writeData.write("\t\tClaimsDao claimsDao = claimsSet.getClaimsDetailsAfterSet(request.getHeader(\"Authorization\"));\n")
-writeData.write("\t\t"+modelName+" setVal = ser.getPk1(getVal.getId());\n")
+writeData.write("\t\t"+modelName+" setVal = ser.getPk1(getVal.get"+list(pk.keys())[0]+"());\n")
 writeData.write("\t\tif(setVal!=null){\n")
-writeData.write("\t\t\tif(ser.getPk2(getVal.getName())!=null)\n")
-writeData.write("\t\t\t\tthrow new Exception(getVal.getName()+\" Value Already Set\");\n")
+writeData.write("\t\t\tif(ser.getPk2(getVal.get"+list(uk.keys())[0]+"())!=null)\n")
+writeData.write("\t\t\t\tthrow new Exception(getVal.get"+list(uk.keys())[0]+"()+\" Value Already Set\");\n")
 writeData.write("\t\t\tsetVal.setUpBy(claimsDao.getUsr());\n")
 writeData.write("\t\t\tsetVal.setIsActive(getVal.getIsActive());\n")
-writeData.write("\t\t\tsetVal.setName(getVal.getName());\n")
-writeData.write("\t\t\tsetVal.setNote(getVal.getNote());\n")
+writeData.write("\t\t\tsetVal.set"+list(uk.keys())[0]+"(getVal.get"+list(uk.keys())[0]+"());\n")
+writeData.write("\t\t\tsetVal.setDescription(getVal.getDescription());\n")
 writeData.write("\t\t\tser.setData(setVal);\n")
 writeData.write("\t\t}else{\n")
-writeData.write("\t\t\tthrow new Exception(getVal.getName()+\" Value Not Found To Update\");\n")
+writeData.write("\t\t\tthrow new Exception(getVal.get"+list(uk.keys())[0]+"()+\" Value Not Found To Update\");\n")
 writeData.write("\t\t}\n")
 writeData.write("\t\treturn new ResponseEntity<>(new ReportDao(\"Updated Successfully\",true), HttpStatus.OK);\n")
 writeData.write("\t}\n")
 # Delete
 writeData.write("\t@DeleteMapping(value =\"/"+apiName+"/{id}\")\n")
 writeData.write("\tpublic ResponseEntity<?> masterDelete(HttpServletRequest request\n")
-writeData.write("\t\t\t,@PathVariable(name=\"id\") Integer id) throws Exception {\n")
+writeData.write("\t\t\t,@PathVariable(name=\"id\") "+list(pk.values())[0]+" id) throws Exception {\n")
 writeData.write("\t\tClaimsDao claimsDao = claimsSet.getClaimsDetailsAfterSet(request.getHeader(\"Authorization\"));\n")
 writeData.write("\t\t"+modelName+" getVal = ser.getPk1(id);\n")
 writeData.write("\t\tif(getVal == null){\n")
@@ -87,7 +96,7 @@ writeData.write("\n")
 # Get by id
 writeData.write("\t@GetMapping(value =\"/"+apiName+"/{id}\")\n")
 writeData.write("\tpublic ResponseEntity<?> masterGet(HttpServletRequest request\n")
-writeData.write("\t\t\t,@PathVariable(name=\"id\") Integer id) throws Exception {\n")
+writeData.write("\t\t\t,@PathVariable(name=\"id\") "+list(pk.values())[0]+" id) throws Exception {\n")
 writeData.write("\t\tClaimsDao claimsDao = claimsSet.getClaimsDetailsAfterSet(request.getHeader(\"Authorization\"));\n")
 writeData.write("\t\t"+modelName+" getVal = ser.getPk1(id);\n")
 writeData.write("\t\tif(getVal == null)\n")

@@ -1,3 +1,4 @@
+import re
 #Convert query to model
 #--------------------------------------
 projectName = "itz.scs"
@@ -11,9 +12,16 @@ className = "CarBrand"
 baseName = "carBrand"
 folderName = "car_brand"
 # Generate Pk to set,get data in db
-methodPk = [{"Id": "Integer","Name": "String"}]
+#methodPk = [{"Id": "Integer","Name": "String"}]
 createdBy = "Abdul Baasit"
 #--------------------------------------
+
+pk=""
+pkType=""
+uk=""
+ukType=""
+
+# -------------------
 file = open("GetData", "r")
 name = []
 flag = 0
@@ -28,13 +36,21 @@ for line in file:
     fields = line.rstrip('\n').split(" ")
     for word in fields :
         check = word.rstrip(',()')
-        if check != "NOT" and check != "NULL" and check != "CREATE" and check != "KEY" and check != "UNIQUE" and check != "AUTO_INCREMENT":
+
+        if check != "NOT" and check != "NULL" and check != "CREATE" and check != "KEY"  and check != "AUTO_INCREMENT":
             #print(check)
             get = 1
             if check == "TABLE":
                 tableName = fields[i + 1]
                 get=0
+            if check == "UNIQUE":
+                uk = fields[i - 3].rstrip(',();')
+                uk = uk.replace('(','')
+                ukType = fields[i - 2].rstrip(',();')
+                continue
             if check == "PRIMARY":
+                pk = fields[i + 4].rstrip(',();')
+                pk = pk.replace('(','')
                 break;
         if get ==1:
             if tableName == word:
@@ -50,6 +66,9 @@ for line in file:
         i=i+1
 
 print("tablename :"+tableName)
+print("primaryKey :"+pk)
+print("uniqueKey :"+uk)
+print("uniqueKeyType :"+ukType)
 print(columnName)
 print(columnType)
 file.close()
@@ -70,9 +89,9 @@ for name in columnName:
         writeData.write("\t@GeneratedValue(strategy=GenerationType.IDENTITY)\n")
         if name == "(Id" :
             name = name.split('(')[1]
-    if (name != "CrAt" and name != "UpAt"):
-        writeData.write("\t@Column(name=\"")
-        writeData.write(name+"\")\n")
+    # if (name != "CrAt" and name != "UpAt"):
+    #     writeData.write("\t@Column(name=\"")
+    #     writeData.write(name+"\")\n")
     columnTypeCk = columnType[i].split("(")[0]
     #print(columnTypeCk)
     if columnTypeCk == "int" or columnTypeCk == "smallint" or columnTypeCk == "bigint":
@@ -189,7 +208,8 @@ for name in columnName:
     if columnTypeCk == "int" or columnTypeCk == "smallint" or columnTypeCk == "bigint":
         writeData.write("\tInteger get"+name+"();\n")
     elif columnTypeCk == "tinyint":
-        writeData.write("\tBoolean get"+name+"();\n")
+        if (name != "IsActive"):
+            writeData.write("\tBoolean get"+name+"();\n")
     elif columnTypeCk == "float":
         writeData.write("\tFloat get" + name + "();\n")
     elif columnTypeCk == "double" or columnTypeCk == "amount":
