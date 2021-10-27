@@ -88,9 +88,11 @@ writeData.write("\t\t}\n")
 writeData.write("\t}\n")
 writeData.write("\n")
 #get all by pagination
-writeData.write("\tpublic Page<"+modelName+"> getAllDataByPg(int pn, int ps) throws Exception {\n")
+writeData.write("\tpublic Page<"+modelName+"> getAllDataByPg(int st, int lt,String sk) throws Exception {\n")
 writeData.write("\t\ttry {\n")
-writeData.write("\t\t\treturn rep.findByIsActive(true,PageRequest.of(pn, ps));\n")
+writeData.write("\t\t\tif(!sk.equals(\"-1\"))\n")
+writeData.write("\t\t\t\treturn rep.findByIsActiveAnd"+list(uk.keys())[0]+"ContainingIgnoreCase(true,sk,new OffsetBasedPageRequest(st, lt));\n")
+writeData.write("\t\t\treturn rep.findByIsActive(true,new OffsetBasedPageRequest(st,lt));\n")
 writeData.write("\t\t} catch (Exception e) {\n")
 writeData.write("\t\t\tthrow new Exception(e.getMessage());\n")
 writeData.write("\t\t}\n")
@@ -100,7 +102,7 @@ writeData.write("}\n")
 writeData.close();
 # service - > getPk1,getPk2,delData,setData,getAllData,getAllDataByPg
 
-# creating a service class
+# creating a repository class
 writeData = open("output/" + className + "Repository.java", 'w+')
 
 writeData.write("package com."+pn+".usecases."+folderName+";\n")
@@ -116,4 +118,5 @@ writeData.write("\t"+modelName+" findBy"+list(pk.keys())[0]+"("+list(pk.values()
 writeData.write("\t"+modelName+" findBy"+list(uk.keys())[0]+"("+list(uk.values())[0]+" pk0);\n")
 writeData.write("\tList<"+modelName+"> findByIsActive(boolean b);\n")
 writeData.write("\tPage<"+modelName+"> findByIsActive(boolean b, Pageable pg);\n")
+writeData.write("\tPage<"+modelName+"> findByIsActiveAnd"+list(uk.keys())[0]+"ContainingIgnoreCase(boolean b,String searchKey,Pageable of);\n")
 writeData.write("}\n")
