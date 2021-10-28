@@ -2,7 +2,7 @@ import string
 import os
 print("convert dao into pojo for spring boot model")
 
-parent_dir = "E:/pycharm/spring-boot-automation/output"
+parent_dir = "/spring-boot-automation/output"
 
 # input to set the controller,service and model name
 projectName = "uclo.poc"
@@ -17,7 +17,7 @@ path = os.path.join(parent_dir, folderName)
 os.mkdir(path)
 print(path)
 
-getData = open('GetData', 'r')
+getData = open('../GetData', 'r')
 writeData = open(path + "/" + className + "Pojo.java", 'w+')
 lines = getData.readlines()
 # create pojo

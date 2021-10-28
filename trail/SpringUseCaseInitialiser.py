@@ -15,7 +15,7 @@ folderName = "car_brand"
 methodPk = [{"Id": "Integer"},{"Name": "String"}]
 createdBy = "Abdul Baasit"
 #--------------------------------------
-file = open("GetData", "r")
+file = open("../GetData", "r")
 name = []
 flag = 0
 check = ""
@@ -98,7 +98,7 @@ writeData.close()
 
 import os
 
-parent_dir = "E:/pycharm/spring-boot-automation/output"
+parent_dir = "/spring-boot-automation/output"
 print("Create a controller , service & repo ")
 
 

@@ -10,7 +10,7 @@ plantName = 1
 aliasName = 1
 #--------------------------------------
 seperator = " "
-getData = open('GetData', 'r')
+getData = open('../GetData', 'r')
 writeData = open("output/"+className+".java", 'w+')
 lines = getData.readlines()
 print(lines[0])

@@ -1,6 +1,6 @@
 # Accessing a text file - www.101computing.net/mp3-playlist/
 
-file = open("GetData", "r")
+file = open("../GetData", "r")
 name = []
 flag = 0
 for line in file:

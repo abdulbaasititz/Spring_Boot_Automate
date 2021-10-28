@@ -1,16 +1,9 @@
 import re
 #Convert query to model
 #--------------------------------------
-projectName = "itz.scs"
-tableName = "CarBrand"
+pn = "itz.scs"
 
-# it should be same name which create in model folder
-modelName = "CarBrand"
-# common name for all cntrl,service
-className = "CarBrand"
-# object name for class
-baseName = "carBrand"
-folderName = "car_brand"
+
 # Generate Pk to set,get data in db
 #methodPk = [{"Id": "Integer","Name": "String"}]
 createdBy = "Abdul Baasit"
@@ -72,13 +65,23 @@ print("uniqueKeyType :"+ukType)
 print(columnName)
 print(columnType)
 file.close()
+# --------------------
+# tableName = "CarBrand"
+folderName = '_'.join([x.lower() for x in re.findall('[A-Z][^A-Z]*', tableName)])
+print("folderName :"+folderName)
+modelName = tableName
+className = tableName
+baseName = ''.join([tableName[0].lower() + tableName[1:]])
+
+# ----------------------
 i=0
 get = 0
 print("convert get data into spring boot model")
 seperator = " "
 writeData = open("output/"+className+".java", 'w+')
 idSet = 0
-writeData.write("package com."+projectName+".persistence.models;\n")
+writeData.write("package com." + pn + ".persistence.models;\n")
+writeData.write("import com.itz.scs.helpers.utils.JwtUtil;\n")
 writeData.write("import lombok.Getter;\nimport lombok.Setter;\nimport javax.persistence.*;\n\n")
 writeData.write("@Entity @Table(name=\"" + tableName + "\") \n")
 writeData.write("@Getter @Setter\n")
@@ -91,8 +94,10 @@ for name in columnName:
         if name == "(Id" :
             name = name.split('(')[1]
     # if (name != "CrAt" and name != "UpAt"):
-    #     writeData.write("\t@Column(name=\"")
-    #     writeData.write(name+"\")\n")
+    #     writeData.write("\t@Column(size=\"")
+    #     writeData.write(columnType[i].split("(")[1] + "\")\n")
+        # writeData.write("\t@Column(name=\"")
+        # writeData.write(name+"\")\n")
     columnTypeCk = columnType[i].split("(")[0]
     #print(columnTypeCk)
     if columnTypeCk == "int" or columnTypeCk == "smallint" or columnTypeCk == "bigint":
@@ -130,7 +135,7 @@ print("convert get data into spring boot idDao")
 seperator = " "
 writeData = open("output/"+className+"IdDao.java", 'w+')
 idSet = 0
-writeData.write("package com."+projectName+".persistence.dao;\n")
+writeData.write("package com."+pn+".use_cases."+folderName+".dao;\n\n")
 writeData.write("import lombok.Getter;\nimport lombok.Setter;\n\n")
 writeData.write("@Getter @Setter\n")
 writeData.write("public class "+className+"IdDao {\n")
@@ -140,6 +145,9 @@ for name in columnName:
         if name == "(Id" :
             name = name.split('(')[1]
     columnTypeCk = columnType[i].split("(")[0]
+    if (name != "CrAt" and name != "CrBy" and name != "UpAt" and name != "UpBy"):
+        writeData.write("\t@Size(max=")
+        writeData.write(columnType[i].split("(")[1] + ")\n")
     #print(columnTypeCk)
     if columnTypeCk == "int" or columnTypeCk == "smallint" or columnTypeCk == "bigint":
         writeData.write("\tprivate Integer " + ''.join([name[0].lower() + name[1:]]) + ";\n")
@@ -166,7 +174,7 @@ print("convert get data into spring boot dao")
 seperator = " "
 writeData = open("output/"+className+"Dao.java", 'w+')
 idSet = 0
-writeData.write("package com."+projectName+".persistence.dao;\n")
+writeData.write("package com."+pn+".use_cases."+folderName+".dao;\n\n")
 writeData.write("import lombok.Getter;\nimport lombok.Setter;\n\n")
 writeData.write("@Getter @Setter\n")
 writeData.write("public class "+className+"Dao {\n")
@@ -178,6 +186,9 @@ for name in columnName:
         if name == "(Id" :
             name = name.split('(')[1]
     columnTypeCk = columnType[i].split("(")[0]
+    if (name != "CrAt" and name != "CrBy" and name != "UpAt" and name != "UpBy"):
+        writeData.write("\t@Size(max=")
+        writeData.write(columnType[i].split("(")[1] + ")\n")
     #print(columnTypeCk)
     if columnTypeCk == "int" or columnTypeCk == "smallint" or columnTypeCk == "bigint":
         writeData.write("\tprivate Integer " + ''.join([name[0].lower() + name[1:]]) + ";\n")
@@ -193,6 +204,7 @@ for name in columnName:
     else:
         if (name != "CrAt" and name != "CrBy" and name != "UpAt" and name != "UpBy"):
             writeData.write("\tprivate String "+''.join([name[0].lower()+name[1:]])+";\n")
+
     i=i+1;
 
 writeData.write("}")
@@ -205,7 +217,7 @@ print("convert get data into spring boot pojo")
 seperator = " "
 writeData = open("output/"+className+"Pojo.java", 'w+')
 idSet = 0
-writeData.write("package com."+projectName+".persistence.dao;\n\n")
+writeData.write("package com." + pn + ".persistence.dao;\n\n")
 writeData.write("public interface "+className+"Pojo {\n")
 for name in columnName:
     if idSet == 0 and name == "ID" or name == "(Id" :

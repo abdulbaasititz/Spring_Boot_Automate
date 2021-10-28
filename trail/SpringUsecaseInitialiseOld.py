@@ -1,6 +1,6 @@
 import os
 
-parent_dir = "E:/pycharm/spring-boot-automation/output"
+parent_dir = "/spring-boot-automation/output"
 print("Create a controller , service & repo ")
 
 # input to set the controller,service and model name
