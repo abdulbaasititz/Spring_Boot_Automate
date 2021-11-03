@@ -215,11 +215,15 @@ writeData.close()
 # ---------------------------
 print("convert get data into spring boot pojo")
 seperator = " "
-writeData = open("output/"+className+"CstPojo.java", 'w+')
+writeDataCstPojo = open("output/"+className+"CstPojo.java", 'w+')
+writeDataCstDao = open("output/"+className+"CstDao.java", 'w+')
 idSet = 0
-writeData.write("package com." + pn + ".persistence.dao;\n\n")
-writeData.write("public interface "+className+"Pojo {\n")
-
+writeDataCstPojo.write("package com." + pn + ".persistence.dao;\n\n")
+writeDataCstDao.write("package com."+pn+".use_cases."+folderName+".dao;\n\n")
+writeDataCstDao.write("import lombok.Getter;\nimport lombok.Setter;\n\n")
+writeDataCstDao.write("@Getter @Setter\n")
+writeDataCstPojo.write("public interface "+className+"CstPojo {\n")
+writeDataCstDao.write("public class "+className+"CstDao {\n")
 # ----------------------
 rx = re.compile(r'(?<=[a-z])(?=[A-Z])')
 columnNameSpt = [rx.sub(' ', word) for word in columnName]
@@ -234,36 +238,45 @@ for name in columnName:
     if (name != "CrAt" and name != "CrBy" and name != "UpAt" and name != "UpBy"):
         check = rx.sub(' ', name).split(' ')
         columnTypeCk = columnType[i].split("(")[0]
-        print(columnTypeCk)
+        # print(columnTypeCk)
         if name == "Id" or name == "(Id":
             # print("t1."+word+",",end="")
-            selectQry = selectQry+"t1."+name+","
-            writeData.write("\tInteger getId();\n")
+            selectQry = selectQry+"t1.Id,"
+            writeDataCstPojo.write("\tInteger getId();\n")
+            writeDataCstDao.write("\tprivate Integer id;\n")
         elif len(check) == 1 :
             # print("t1."+word+",",end="")
             selectQry = selectQry + "t1." + name + ","
             if columnTypeCk == "tinyint":
-                writeData.write("\tBoolean get" + name + "();\n")
+                writeDataCstPojo.write("\tBoolean get" + name + "();\n")
+                writeDataCstDao.write("\tprivate Boolean " + ''.join([name[0].lower() + name[1:]]) + ";\n")
             elif columnTypeCk == "float" or columnTypeCk == "double" or columnTypeCk == "amount":
-                writeData.write("\tFloat get" + name + "();\n")
+                writeDataCstPojo.write("\tFloat get" + name + "();\n")
+                writeDataCstDao.write("\tprivate Float " + ''.join([name[0].lower() + name[1:]]) + ";\n")
             else:
-                writeData.write("\tString get" + name + "();\n")
+                writeDataCstPojo.write("\tString get" + name + "();\n")
+                writeDataCstDao.write("\tprivate String " + ''.join([name[0].lower() + name[1:]]) + ";\n")
         elif len(check) > 1:
             if check[1] == "Id":
                 jn = str(int(jn) + 1)
                 # print("t"+jn+"."+word+",", end="")
                 selectQry = selectQry + "t" + jn + ".Id as " + check[0] + "Id,"
-                writeData.write("\tInteger get"+check[0]+"Id();\n")
+                writeDataCstPojo.write("\tInteger get"+check[0]+"Id();\n")
+                writeDataCstDao.write("\tprivate Integer "+ ''.join([check[0][0].lower() + check[0][1:]]) +"Id;\n")
                 selectQry = selectQry + "t" + jn + ".name as " + check[0] + "Name,"
-                writeData.write("\tString get"+check[0]+"Name();\n")
+                writeDataCstPojo.write("\tString get"+check[0]+"Name();\n")
+                writeDataCstDao.write("\tprivate String "+''.join([check[0][0].lower() + check[0][1:]])+"Name;\n")
                 tables.append(check[0])
             elif len(check) > 2 and check[2] == "Id":
                 jn = str(int(jn) + 1)
                 # print("t"+jn+"."+word+",", end="")
                 selectQry = selectQry + "t" + jn + ".Id as " + check[0]+check[1] + "Id,"
-                writeData.write("\tInteger get" + check[0]+check[1] + "Id();\n")
+                print(''.join([check[0][0].lower() + check[0][1:]]))
+                writeDataCstPojo.write("\tInteger get" + check[0]+check[1] + "Id();\n")
+                writeDataCstDao.write("\tprivate Integer " + ''.join([check[0][0].lower() + check[0][1:]])+check[1] + "Id;\n")
                 selectQry = selectQry + "t" + jn + ".name as " + check[0]+check[1] + "Name,"
-                writeData.write("\tString get" + check[0]+check[1] + "Name();\n")
+                writeDataCstPojo.write("\tString get" + check[0]+check[1] + "Name();\n")
+                writeDataCstDao.write("\tprivate String "+''.join([check[0][0].lower() + check[0][1:]])+check[1]+"Name;\n")
                 tables.append(check[0]+check[1])
     i=i+1
 
@@ -298,5 +311,7 @@ if int(jn)>1:
 print(selectQry)
 # -------------------------------
 
-writeData.write("}")
-writeData.close()
+writeDataCstPojo.write("}")
+writeDataCstPojo.close()
+writeDataCstDao.write("}")
+writeDataCstDao.close()
