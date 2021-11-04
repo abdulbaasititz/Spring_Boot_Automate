@@ -2,7 +2,7 @@ import re
 #Convert query to model
 #--------------------------------------
 pn = "itz.scs" #Project Name
-tableName = "CompanyService"
+tableName = "VendorService"
 moduleName = "company_module"
 cstQry = 1
 # Should be underscore snake_case
