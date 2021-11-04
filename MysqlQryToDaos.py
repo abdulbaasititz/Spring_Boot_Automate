@@ -131,46 +131,7 @@ writeData.close()
 
 get=0
 i=0
-print("convert get data into spring boot idDao")
-seperator = " "
-writeData = open("output/"+className+"IdDao.java", 'w+')
-idSet = 0
-writeData.write("package com."+pn+".use_cases."+folderName+".dao;\n\n")
-writeData.write("import lombok.Getter;\nimport lombok.Setter;\n\n")
-writeData.write("@Getter @Setter\n")
-writeData.write("public class "+className+"IdDao {\n")
-for name in columnName:
-    if idSet == 0 and name == "ID" or name == "(Id" :
-        idSet = 1
-        if name == "(Id" :
-            name = name.split('(')[1]
-    columnTypeCk = columnType[i].split("(")[0]
-    if (name != "CrAt" and name != "CrBy" and name != "UpAt" and name != "UpBy"):
-        writeData.write("\t@Size(max=")
-        writeData.write(columnType[i].split("(")[1] + ")\n")
-    #print(columnTypeCk)
-    if columnTypeCk == "int" or columnTypeCk == "smallint" or columnTypeCk == "bigint":
-        writeData.write("\tprivate Integer " + ''.join([name[0].lower() + name[1:]]) + ";\n")
-    elif columnTypeCk == "tinyint":
-        writeData.write("\tprivate Boolean " + ''.join([name[0].lower() + name[1:]]) + ";\n")
-    elif columnTypeCk == "float":
-        writeData.write("\tprivate Float " + ''.join([name[0].lower() + name[1:]]) + ";\n")
-    elif columnTypeCk == "double" or columnTypeCk == "amount":
-        writeData.write("\tprivate Float " + ''.join([name[0].lower() + name[1:]]) + ";\n")
-    elif columnTypeCk == "date":
-        if (name != "CrAt" and name != "CrBy" and name != "UpAt" and name != "UpBy"):
-            writeData.write("\tprivate Date " + ''.join([name[0].lower() + name[1:]]) + ";\n")
-    else:
-        if (name != "CrAt" and name != "CrBy" and name != "UpAt" and name != "UpBy"):
-            writeData.write("\tprivate String "+''.join([name[0].lower()+name[1:]])+";\n")
-    i=i+1;
-
-writeData.write("}")
-writeData.close()
-
-
-i=0
-print("convert get data into spring boot dao")
+print("convert get data into spring boot Dao")
 seperator = " "
 writeData = open("output/"+className+"Dao.java", 'w+')
 idSet = 0
@@ -180,8 +141,6 @@ writeData.write("@Getter @Setter\n")
 writeData.write("public class "+className+"Dao {\n")
 for name in columnName:
     if idSet == 0 and name == "ID" or name == "(Id" :
-        i = i + 1;
-        continue;
         idSet = 1
         if name == "(Id" :
             name = name.split('(')[1]
@@ -204,11 +163,11 @@ for name in columnName:
     else:
         if (name != "CrAt" and name != "CrBy" and name != "UpAt" and name != "UpBy"):
             writeData.write("\tprivate String "+''.join([name[0].lower()+name[1:]])+";\n")
-
     i=i+1;
 
 writeData.write("}")
 writeData.close()
+
 
 
 

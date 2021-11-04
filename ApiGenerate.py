@@ -2,8 +2,9 @@ import re
 #Convert query to model
 #--------------------------------------
 pn = "itz.scs" #Project Name
-tableName = "VendorService"
+tableName = "CompanyService"
 moduleName = "company_module"
+cstQry = 0
 # Should be underscore snake_case
 folderName = '_'.join([x.lower() for x in re.findall('[A-Z][^A-Z]*', tableName)])
 
@@ -16,8 +17,8 @@ baseName = ''.join([tableName[0].lower() + tableName[1:]])
 # SHould be hipen snake_case
 apiName = folderName.replace('_','-')
 # Generate Pk,FK,unique to set,get data in db
-pk = {"Id": "Integer"}
-uk = {"Name": "String"}
+# pk = {"Id": "Integer"}
+# uk = {"Name": "String"}
 #fk = [{"ItemId": "String","ItemSku": "String"},{"ItemId": "String","VariantId": "String"}]
 createdBy = "Abdul Baasit"
 #--------------------------------------
@@ -40,6 +41,269 @@ else:
     os.mkdir(daoPath)
 
 print(path)
+# --------------------------
+
+pk={}
+pkType=""
+uk={}
+ukType=""
+
+# -------------------
+file = open("GetData", "r")
+name = []
+flag = 0
+check = ""
+get = ""
+
+columnName=[]
+columnType=[]
+i =0
+toggle=-1
+for line in file:
+    fields = line.rstrip('\n').split(" ")
+    for word in fields :
+        check = word.rstrip(',()')
+
+        if check != "NOT" and check != "NULL" and check != "CREATE" and check != "KEY"  and check != "AUTO_INCREMENT":
+            #print(check)
+            get = 1
+            if check == "TABLE":
+                tableName = fields[i + 1]
+                get=0
+            if check == "UNIQUE":
+                ukTemp = fields[i - 3].rstrip(',();')
+                ukTemp = ukTemp.replace('(','')
+                uk[ukTemp] = 'String'
+                ukType = fields[i - 2].rstrip(',();')
+                continue
+            if check == "PRIMARY":
+                pkTemp = fields[i + 4].rstrip(',();')
+                pkTemp = pkTemp.replace('(','')
+                pk[pkTemp]='Integer'
+                break;
+        if get ==1:
+            if tableName == word:
+                toggle = 0
+                continue
+            if toggle == 0:
+                columnName.append(check)
+                toggle = 1
+            else:
+                columnType.append(check)
+                toggle = 0
+            get =0
+        i=i+1
+
+
+print("tablename :"+tableName)
+print("primaryKey :"+str(pk))
+print("uniqueKey :"+str(uk))
+print("uniqueKeyType :"+ukType)
+print(columnName)
+print(columnType)
+file.close()
+
+# ----------------------
+i=0
+get = 0
+print("convert get data into spring boot model")
+seperator = " "
+writeData = open("output/"+className+".java", 'w+')
+
+idSet = 0
+writeData.write("package com." + pn + ".persistence.models;\n")
+writeData.write("import com.itz.scs.helpers.utils.JwtUtil;\n")
+writeData.write("import lombok.Getter;\nimport lombok.Setter;\nimport javax.persistence.*;\n\n")
+writeData.write("@Entity @Table(name=\"" + tableName + "\") \n")
+writeData.write("@Getter @Setter\n")
+writeData.write("public class "+className+" extends Auditable<String> {\n")
+for name in columnName:
+    if idSet == 0 and name == "ID" or name == "(Id" :
+        idSet = 1
+        writeData.write("\t@Id\n")
+        writeData.write("\t@GeneratedValue(strategy=GenerationType.IDENTITY)\n")
+        if name == "(Id" :
+            name = name.split('(')[1]
+    columnTypeCk = columnType[i].split("(")[0]
+    #print(columnTypeCk)
+    if columnTypeCk == "int" or columnTypeCk == "smallint" or columnTypeCk == "bigint":
+        if idSet == 1:
+            writeData.write("\tprivate Integer " + ''.join([name[0].lower() + name[1:]]) + " = 0;\n")
+            idSet = 2
+        else :
+            writeData.write("\tprivate Integer " + ''.join([name[0].lower() + name[1:]]) + ";\n")
+    elif columnTypeCk == "tinyint":
+        writeData.write("\tprivate Boolean " + ''.join([name[0].lower() + name[1:]]) + ";\n")
+    elif columnTypeCk == "float" or columnTypeCk == "double" or columnTypeCk == "amount":
+        writeData.write("\tprivate Float " + ''.join([name[0].lower() + name[1:]]) + ";\n")
+    elif columnTypeCk == "date" :
+        if (name != "CrAt" and name != "UpAt"):
+            writeData.write("\tprivate Date " + ''.join([name[0].lower() + name[1:]]) + ";\n")
+    elif columnTypeCk == "timestamp" :
+        if (name != "CrAt" and name != "UpAt"):
+            writeData.write("\tprivate Timestamp " + ''.join([name[0].lower() + name[1:]]) + ";\n")
+    else:
+        if (get == 0 and name == "CrBy"):
+            writeData.write("\tprivate String crBy = JwtUtil.usr;\n")
+            get = 1;i=i+1;
+            continue;
+        writeData.write("\tprivate String "+''.join([name[0].lower()+name[1:]])+";\n")
+    i=i+1
+
+writeData.write("}")
+writeData.close()
+# ---------
+
+get=0
+i=0
+print("convert get data into spring boot Dao")
+seperator = " "
+#writeData = open("output/"+className+"Dao.java", 'w+')
+writeData = open(path + "/dao/" + className + "Dao.java", 'w+')
+idSet = 0
+writeData.write("package com."+pn+".use_cases."+moduleName+"."+folderName+".dao;\n\n")
+writeData.write("import lombok.Getter;\nimport lombok.Setter;\nimport javax.validation.constraints.Size;\n\n")
+writeData.write("@Getter @Setter\n")
+writeData.write("public class "+className+"Dao {\n")
+for name in columnName:
+    if idSet == 0 and name == "ID" or name == "(Id" :
+        idSet = 1
+        if name == "(Id" :
+            name = name.split('(')[1]
+    columnTypeCk = columnType[i].split("(")[0]
+    if (name != "CrAt" and name != "CrBy" and name != "UpAt" and name != "UpBy"):
+        writeData.write("\t@Size(max=")
+        writeData.write(columnType[i].split("(")[1] + ")\n")
+    #print(columnTypeCk)
+    if columnTypeCk == "int" or columnTypeCk == "smallint" or columnTypeCk == "bigint":
+        writeData.write("\tprivate Integer " + ''.join([name[0].lower() + name[1:]]) + ";\n")
+    elif columnTypeCk == "tinyint":
+        writeData.write("\tprivate Boolean " + ''.join([name[0].lower() + name[1:]]) + ";\n")
+    elif columnTypeCk == "float":
+        writeData.write("\tprivate Float " + ''.join([name[0].lower() + name[1:]]) + ";\n")
+    elif columnTypeCk == "double" or columnTypeCk == "amount":
+        writeData.write("\tprivate Float " + ''.join([name[0].lower() + name[1:]]) + ";\n")
+    elif columnTypeCk == "date":
+        if (name != "CrAt" and name != "CrBy" and name != "UpAt" and name != "UpBy"):
+            writeData.write("\tprivate Date " + ''.join([name[0].lower() + name[1:]]) + ";\n")
+    else:
+        if (name != "CrAt" and name != "CrBy" and name != "UpAt" and name != "UpBy"):
+            writeData.write("\tprivate String "+''.join([name[0].lower()+name[1:]])+";\n")
+    i=i+1;
+
+writeData.write("}")
+writeData.close()
+
+if cstQry == 1 :
+    # ---------------------------
+    print("convert get data into spring boot Custom pojo and Dao")
+    seperator = " "
+    writeDataCstPojo = open(path+"/dao/"+className+"CstPojo.java", 'w+')
+    writeDataCstDao = open(path+"/dao/"+className+"CstDao.java", 'w+')
+    # writeData = open(path + "/dao/" + className + "Dao.java", 'w+')
+    idSet = 0
+    writeDataCstPojo.write("package com." + pn + ".persistence.dao;\n\n")
+    writeDataCstDao.write("package com."+pn+".use_cases."+folderName+".dao;\n\n")
+    writeDataCstDao.write("import lombok.Getter;\nimport lombok.Setter;\n\n")
+    writeDataCstDao.write("@Getter @Setter\n")
+    writeDataCstPojo.write("public interface "+className+"CstPojo {\n")
+    writeDataCstDao.write("public class "+className+"CstDao {\n")
+    # ----------------------
+    rx = re.compile(r'(?<=[a-z])(?=[A-Z])')
+    columnNameSpt = [rx.sub(' ', word) for word in columnName]
+    print(columnNameSpt)
+    selectQry=""
+    tables=[tableName]
+    jn = 1
+    i = 0
+    # print("Select ",end="")
+    selectQry = "Select "
+    for name in columnName:
+        if (name != "CrAt" and name != "CrBy" and name != "UpAt" and name != "UpBy"):
+            check = rx.sub(' ', name).split(' ')
+            columnTypeCk = columnType[i].split("(")[0]
+            # print(columnTypeCk)
+            if name == "Id" or name == "(Id":
+                # print("t1."+word+",",end="")
+                selectQry = selectQry+"t1.Id,"
+                writeDataCstPojo.write("\tInteger getId();\n")
+                writeDataCstDao.write("\tprivate Integer id;\n")
+            elif len(check) == 1 :
+                # print("t1."+word+",",end="")
+                selectQry = selectQry + "t1." + name + ","
+                if columnTypeCk == "tinyint":
+                    writeDataCstPojo.write("\tBoolean get" + name + "();\n")
+                    writeDataCstDao.write("\tprivate Boolean " + ''.join([name[0].lower() + name[1:]]) + ";\n")
+                elif columnTypeCk == "float" or columnTypeCk == "double" or columnTypeCk == "amount":
+                    writeDataCstPojo.write("\tFloat get" + name + "();\n")
+                    writeDataCstDao.write("\tprivate Float " + ''.join([name[0].lower() + name[1:]]) + ";\n")
+                else:
+                    writeDataCstPojo.write("\tString get" + name + "();\n")
+                    writeDataCstDao.write("\tprivate String " + ''.join([name[0].lower() + name[1:]]) + ";\n")
+            elif len(check) > 1:
+                if check[1] == "Id":
+                    jn = str(int(jn) + 1)
+                    # print("t"+jn+"."+word+",", end="")
+                    selectQry = selectQry + "t" + jn + ".Id as " + check[0] + "Id,"
+                    writeDataCstPojo.write("\tInteger get"+check[0]+"Id();\n")
+                    writeDataCstDao.write("\tprivate Integer "+ ''.join([check[0][0].lower() + check[0][1:]]) +"Id;\n")
+                    selectQry = selectQry + "t" + jn + ".name as " + check[0] + "Name,"
+                    writeDataCstPojo.write("\tString get"+check[0]+"Name();\n")
+                    writeDataCstDao.write("\tprivate String "+''.join([check[0][0].lower() + check[0][1:]])+"Name;\n")
+                    tables.append(check[0])
+                elif len(check) > 2 and check[2] == "Id":
+                    jn = str(int(jn) + 1)
+                    # print("t"+jn+"."+word+",", end="")
+                    selectQry = selectQry + "t" + jn + ".Id as " + check[0]+check[1] + "Id,"
+                    print(''.join([check[0][0].lower() + check[0][1:]]))
+                    writeDataCstPojo.write("\tInteger get" + check[0]+check[1] + "Id();\n")
+                    writeDataCstDao.write("\tprivate Integer " + ''.join([check[0][0].lower() + check[0][1:]])+check[1] + "Id;\n")
+                    selectQry = selectQry + "t" + jn + ".name as " + check[0]+check[1] + "Name,"
+                    writeDataCstPojo.write("\tString get" + check[0]+check[1] + "Name();\n")
+                    writeDataCstDao.write("\tprivate String "+''.join([check[0][0].lower() + check[0][1:]])+check[1]+"Name;\n")
+                    tables.append(check[0]+check[1])
+        i=i+1
+
+
+    print()
+    selectQry = selectQry.rstrip(',')+' from '
+    jn=1
+    print(tables)
+    for name in tables:
+        if name == tableName:
+            selectQry = selectQry + " " + name + " t1 "
+            # print(word)
+        else:
+            jn = str(int(jn) + 1)
+            selectQry = selectQry + " join " + name + " t" + jn
+            # print(word)
+
+
+    if int(jn)>1:
+        jn = 1
+        selectQry = selectQry + " where"
+        for name in tables:
+            if name == tableName:
+                continue
+            else:
+                selectQry = selectQry + " t1." + name + "Id ="
+                jn = str(int(jn) + 1)
+                selectQry = selectQry + " t" + jn + ".Id "
+                if int(jn) < len(tables):
+                    selectQry = selectQry + " And"
+
+    print(selectQry)
+    # -------------------------------
+
+    writeDataCstPojo.write("}")
+    writeDataCstPojo.close()
+    writeDataCstDao.write("}")
+    writeDataCstDao.close()
+    # --------------------
+
+
+
+
 writeData = open(path + "/" + className + "Controller.java", 'w+')
 #Create a Controller
 writeData.write("package com."+pn+".use_cases."+moduleName+"."+folderName+";\n\n")
@@ -60,7 +324,10 @@ writeData.write("\tClaimsSet claimsSet;\n")
 writeData.write("\n")
 # Create
 writeData.write("\t@PostMapping(value =\"/"+apiName+"\")\n")
-writeData.write("\tpublic ResponseEntity<?> masterSet(HttpServletRequest request,@RequestBody "+className+"Dao getVal) throws Exception {\n")
+if cstQry == 1 :
+    writeData.write("\tpublic ResponseEntity<?> masterSet(HttpServletRequest request,@RequestBody "+className+"CstDao getVal) throws Exception {\n")
+else:
+    writeData.write("\tpublic ResponseEntity<?> masterSet(HttpServletRequest request,@RequestBody " + className + "Dao getVal) throws Exception {\n")
 writeData.write("\t\tClaimsDao claimsDao = claimsSet.getClaimsDetailsAfterSet(request.getHeader(\"Authorization\"));\n")
 writeData.write("\t\tif(ser.getPk2(getVal.get"+list(uk.keys())[0]+"())!=null)\n")
 writeData.write("\t\t\tthrow new Exception(getVal.get"+list(uk.keys())[0]+"()+\" Value Already Set\");\n")
@@ -76,14 +343,18 @@ writeData.write("\t\treturn new ResponseEntity<>(new ReportDao(\"Imported Succes
 writeData.write("\t}\n\n")
 # DeleteAll
 writeData.write("\t@PostMapping(value =\"/"+apiName+"/delete-all\")\n")
-writeData.write("\tpublic ResponseEntity<?> masterSetDeleteAll(HttpServletRequest request, @RequestBody List<"+className+"IdDao> getVal) throws Exception {\n")
+writeData.write("\tpublic ResponseEntity<?> masterSetDeleteAll(HttpServletRequest request, @RequestBody List<"+className+"Dao> getVal) throws Exception {\n")
 writeData.write("\t\tClaimsDao claimsDao = claimsSet.getClaimsDetailsAfterSet(request.getHeader(\"Authorization\"));\n")
 writeData.write("\t\tser.delAllData(new ModelMapper().map(getVal, new TypeToken<List<"+modelName+">>(){}.getType()));\n")
 writeData.write("\t\treturn new ResponseEntity<>(new ReportDao(\"Deleted Successfully\", true), HttpStatus.OK);\n")
 writeData.write("\t}\n\n")
 # update
 writeData.write("\t@PutMapping(value =\"/"+apiName+"\")\n")
-writeData.write("\tpublic ResponseEntity<?> masterUpdate(HttpServletRequest request,@RequestBody "+className+"IdDao getVal) throws Exception {\n")
+if cstQry == 1 :
+    writeData.write("\tpublic ResponseEntity<?> masterUpdate(HttpServletRequest request,@RequestBody "+className+"CstDao getVal) throws Exception {\n")
+else:
+    writeData.write("\tpublic ResponseEntity<?> masterUpdate(HttpServletRequest request,@RequestBody "+className+"Dao getVal) throws Exception {\n")
+
 writeData.write("\t\tClaimsDao claimsDao = claimsSet.getClaimsDetailsAfterSet(request.getHeader(\"Authorization\"));\n")
 writeData.write("\t\t"+modelName+" setVal = ser.getPk1(getVal.get"+list(pk.keys())[0]+"());\n")
 writeData.write("\t\tif(setVal!=null){\n")
@@ -127,7 +398,7 @@ writeData.write("\t@GetMapping(value =\"/"+apiName+"\")\n")
 writeData.write("\tpublic ResponseEntity<?> masterGetAll(HttpServletRequest request\n")
 writeData.write("\t\t\t,@RequestParam(required=false,name=\"start\",defaultValue= \"1\")int pageNumber\n")
 writeData.write("\t\t\t,@RequestParam(required=false,name=\"limit\",defaultValue= \"25\")int pageSize\n")
-writeData.write("\t\t\t,@RequestParam(required=false,name=\"searchKey\",defaultValue= \"-1\")String searchKey\n")
+writeData.write("\t\t\t,@RequestParam(required=false,name=\"searchKey\",defaultValue= \"\")String searchKey\n")
 writeData.write("\t\t\t,@RequestParam(required=false,name=\"orderBy\",defaultValue= \"-1\")String orderBy\n")
 writeData.write("\t\t\t,@RequestParam(required=false,name=\"sortOrder\",defaultValue= \"-1\")int sortOrder\n")
 writeData.write("\t\t\t,@RequestParam(required=false,name=\"isPagination\",defaultValue= \"true\")Boolean isPagination) throws Exception {\n")
@@ -135,7 +406,11 @@ writeData.write("\t\tClaimsDao claimsDao = claimsSet.getClaimsDetailsAfterSet(re
 writeData.write("\t\tList<"+modelName+"> getVal;\n")
 writeData.write("\t\tlong totalCount = 0;\n")
 writeData.write("\t\tif(isPagination){\n")
-writeData.write("\t\t\tPage<"+modelName+"> getAllWtPg = ser.getAllDataByPg(pageNumber-1,pageSize-(pageNumber-1),searchKey);\n")
+if cstQry == 1 :
+    writeData.write("\t\t\tPage<"+modelName+"CstPojo> getAllWtPg = ser.getAllDataByPg(pageNumber-1,pageSize-(pageNumber-1),searchKey);\n")
+else:
+    writeData.write("\t\t\tPage<"+modelName+"> getAllWtPg = ser.getAllDataByPg(pageNumber-1,pageSize-(pageNumber-1),searchKey);\n")
+
 writeData.write("\t\t\tgetVal = getAllWtPg.getContent();\n")
 writeData.write("\t\t\ttotalCount = getAllWtPg.getTotalElements();\n")
 writeData.write("\t\t}else{\n")
@@ -145,7 +420,7 @@ writeData.write("\t\t\tpageNumber = 1;\n")
 writeData.write("\t\t\tpageSize= Math.toIntExact(totalCount);\n")
 writeData.write("\t\t}\n")
 writeData.write("\t\treturn new ResponseEntity<>(new ResultsDao(new ModelMapper().map(getVal,\n")
-writeData.write("\t\t\t\tnew TypeToken<List<"+className+"IdDao>>() {\n")
+writeData.write("\t\t\t\tnew TypeToken<List<"+className+"Dao>>() {\n")
 writeData.write("\t\t\t\t}.getType()),pageNumber,pageSize,totalCount), HttpStatus.OK);\n")
 writeData.write("\t}\n")
 writeData.write("}\n")
@@ -231,11 +506,15 @@ writeData.write("\t\t}\n")
 writeData.write("\t}\n")
 writeData.write("\n")
 #get all by pagination
-writeData.write("\tpublic Page<"+modelName+"> getAllDataByPg(int st, int lt,String sk) throws Exception {\n")
+if cstQry == 1 :
+    writeData.write("\tpublic Page<"+modelName+"CstPojo> getAllDataByPg(int st, int lt,String sk) throws Exception {\n")
+else:
+    writeData.write("\tpublic Page<"+modelName+"> getAllDataByPg(int st, int lt,String sk) throws Exception {\n")
+
 writeData.write("\t\ttry {\n")
-writeData.write("\t\t\tif(!sk.equals(\"-1\"))\n")
-writeData.write("\t\t\t\treturn rep.findByIsActiveAnd"+list(uk.keys())[0]+"ContainingIgnoreCase(true,sk,new OffsetBasedPageRequest(st, lt));\n")
-writeData.write("\t\t\treturn rep.findByIsActive(true,new OffsetBasedPageRequest(st,lt));\n")
+
+writeData.write("\t\t\treturn rep.findByIsActiveAnd"+list(uk.keys())[0]+"ContainingIgnoreCase(true,sk,new OffsetBasedPageRequest(st, lt));\n")
+
 writeData.write("\t\t} catch (Exception e) {\n")
 writeData.write("\t\t\tthrow new Exception(e.getMessage());\n")
 writeData.write("\t\t}\n")
@@ -260,238 +539,12 @@ writeData.write("public interface "+className+"Repository extends JpaRepository<
 writeData.write("\t"+modelName+" findBy"+list(pk.keys())[0]+"("+list(pk.values())[0]+" pk0);\n")
 writeData.write("\t"+modelName+" findBy"+list(uk.keys())[0]+"("+list(uk.values())[0]+" pk0);\n")
 writeData.write("\tList<"+modelName+"> findByIsActive(boolean b);\n")
-writeData.write("\tPage<"+modelName+"> findByIsActive(boolean b, Pageable pg);\n")
-writeData.write("\tPage<"+modelName+"> findByIsActiveAnd"+list(uk.keys())[0]+"ContainingIgnoreCase(boolean b,String searchKey,Pageable of);\n")
+if cstQry == 1 :
+    writeData.write("\t@Query(value = "+selectQry+",nativeQuery = true,countQuery = SELECT count(t1.Id) FROM "+selectQry.split("from")[1]+")\n")
+    writeData.write("\tPage<"+modelName+"CstPojo> findByIsActiveAnd"+list(uk.keys())[0]+"ContainingIgnoreCase(boolean b,String searchKey,Pageable of);\n")
+else:
+    writeData.write("\tPage<"+modelName+"> findByIsActiveAnd"+list(uk.keys())[0]+"ContainingIgnoreCase(boolean b,String searchKey,Pageable of);\n")
+
 writeData.write("}\n")
 
 
-
-pk=""
-pkType=""
-uk=""
-ukType=""
-
-# -------------------
-file = open("GetData", "r")
-name = []
-flag = 0
-check = ""
-get = ""
-
-columnName=[]
-columnType=[]
-i =0
-toggle=-1
-for line in file:
-    fields = line.rstrip('\n').split(" ")
-    for word in fields :
-        check = word.rstrip(',()')
-
-        if check != "NOT" and check != "NULL" and check != "CREATE" and check != "KEY"  and check != "AUTO_INCREMENT":
-            #print(check)
-            get = 1
-            if check == "TABLE":
-                tableName = fields[i + 1]
-                get=0
-            if check == "UNIQUE":
-                uk = fields[i - 3].rstrip(',();')
-                uk = uk.replace('(','')
-                ukType = fields[i - 2].rstrip(',();')
-                continue
-            if check == "PRIMARY":
-                pk = fields[i + 4].rstrip(',();')
-                pk = pk.replace('(','')
-                break;
-        if get ==1:
-            if tableName == word:
-                toggle = 0
-                continue
-            if toggle == 0:
-                columnName.append(check)
-                toggle = 1
-            else:
-                columnType.append(check)
-                toggle = 0
-            get =0
-        i=i+1
-
-
-print("tablename :"+tableName)
-print("primaryKey :"+pk)
-print("uniqueKey :"+uk)
-print("uniqueKeyType :"+ukType)
-print(columnName)
-print(columnType)
-file.close()
-i=0
-get = 0
-print("convert get data into spring boot model")
-seperator = " "
-writeData = open("output/"+className+".java", 'w+')
-idSet = 0
-writeData.write("package com."+pn+".persistence.models;\n")
-writeData.write("import com.itz.scs.helpers.utils.JwtUtil;\n")
-writeData.write("import lombok.Getter;\nimport lombok.Setter;\nimport javax.persistence.*;\n\n")
-writeData.write("@Entity @Table(name=\"" + tableName + "\") \n")
-writeData.write("@Getter @Setter\n")
-writeData.write("public class "+className+" extends Auditable<String> {\n")
-for name in columnName:
-    if idSet == 0 and name == "ID" or name == "(Id" :
-        idSet = 1
-        writeData.write("\t@Id\n")
-        writeData.write("\t@GeneratedValue(strategy=GenerationType.IDENTITY)\n")
-        if name == "(Id" :
-            name = name.split('(')[1]
-    # if (name != "CrAt" and name != "UpAt"):
-    #     writeData.write("\t@Column(name=\"")
-    #     writeData.write(name+"\")\n")
-    columnTypeCk = columnType[i].split("(")[0]
-    #print(columnTypeCk)
-    if columnTypeCk == "int" or columnTypeCk == "smallint" or columnTypeCk == "bigint":
-        if idSet == 1:
-            writeData.write("\tprivate Integer " + ''.join([name[0].lower() + name[1:]]) + " = 0;\n")
-            idSet = 2
-        else :
-            writeData.write("\tprivate Integer " + ''.join([name[0].lower() + name[1:]]) + ";\n")
-    elif columnTypeCk == "tinyint":
-        writeData.write("\tprivate Boolean " + ''.join([name[0].lower() + name[1:]]) + ";\n")
-    elif columnTypeCk == "float":
-        writeData.write("\tprivate Float " + ''.join([name[0].lower() + name[1:]]) + ";\n")
-    elif columnTypeCk == "double" or columnTypeCk == "amount":
-        writeData.write("\tprivate Float " + ''.join([name[0].lower() + name[1:]]) + ";\n")
-    elif columnTypeCk == "date" :
-        if (name != "CrAt" and name != "UpAt"):
-            writeData.write("\tprivate Date " + ''.join([name[0].lower() + name[1:]]) + ";\n")
-    elif columnTypeCk == "timestamp" :
-        if (name != "CrAt" and name != "UpAt"):
-            writeData.write("\tprivate Timestamp " + ''.join([name[0].lower() + name[1:]]) + ";\n")
-    else:
-        if (get == 0 and name == "CrBy"):
-            writeData.write("\tprivate String crBy = JwtUtil.usr;\n")
-            get = 1;i=i+1;
-            continue;
-        writeData.write("\tprivate String "+''.join([name[0].lower()+name[1:]])+";\n")
-    i=i+1;
-
-writeData.write("}")
-writeData.close()
-
-get=0
-i=0
-print("convert get data into spring boot idDao")
-seperator = " "
-#writeData = open("output/"+className+"IdDao.java", 'w+')
-writeData = open(path + "/dao/" + className + "IdDao.java", 'w+')
-idSet = 0
-writeData.write("package com."+pn+".use_cases."+moduleName+"."+folderName+".dao;\n\n")
-writeData.write("import lombok.Getter;\nimport lombok.Setter;\nimport javax.validation.constraints.Size;\n\n")
-writeData.write("@Getter @Setter\n")
-writeData.write("public class "+className+"IdDao {\n")
-for name in columnName:
-    if idSet == 0 and name == "ID" or name == "(Id" :
-        idSet = 1
-        if name == "(Id" :
-            name = name.split('(')[1]
-    columnTypeCk = columnType[i].split("(")[0]
-    if (name != "CrAt" and name != "CrBy" and name != "UpAt" and name != "UpBy"):
-        writeData.write("\t@Size(max=")
-        writeData.write(columnType[i].split("(")[1] + ")\n")
-    #print(columnTypeCk)
-    if columnTypeCk == "int" or columnTypeCk == "smallint" or columnTypeCk == "bigint":
-        writeData.write("\tprivate Integer " + ''.join([name[0].lower() + name[1:]]) + ";\n")
-    elif columnTypeCk == "tinyint":
-        writeData.write("\tprivate Boolean " + ''.join([name[0].lower() + name[1:]]) + ";\n")
-    elif columnTypeCk == "float":
-        writeData.write("\tprivate Float " + ''.join([name[0].lower() + name[1:]]) + ";\n")
-    elif columnTypeCk == "double" or columnTypeCk == "amount":
-        writeData.write("\tprivate Float " + ''.join([name[0].lower() + name[1:]]) + ";\n")
-    elif columnTypeCk == "date":
-        if (name != "CrAt" and name != "CrBy" and name != "UpAt" and name != "UpBy"):
-            writeData.write("\tprivate Date " + ''.join([name[0].lower() + name[1:]]) + ";\n")
-    else:
-        if (name != "CrAt" and name != "CrBy" and name != "UpAt" and name != "UpBy"):
-            writeData.write("\tprivate String "+''.join([name[0].lower()+name[1:]])+";\n")
-    i=i+1;
-
-writeData.write("}")
-writeData.close()
-
-
-i=0
-print("convert get data into spring boot dao")
-seperator = " "
-# writeData = open("output/"+className+"Dao.java", 'w+')
-writeData = open(path + "/dao/" + className + "Dao.java", 'w+')
-idSet = 0
-writeData.write("package com."+pn+".use_cases."+moduleName+"."+folderName+".dao;\n\n")
-writeData.write("import lombok.Getter;\nimport lombok.Setter;\nimport javax.validation.constraints.Size;\n\n")
-writeData.write("@Getter @Setter\n")
-writeData.write("public class "+className+"Dao {\n")
-for name in columnName:
-    if idSet == 0 and name == "ID" or name == "(Id" :
-        i = i + 1;
-        continue;
-        idSet = 1
-        if name == "(Id" :
-            name = name.split('(')[1]
-    columnTypeCk = columnType[i].split("(")[0]
-    if (name != "CrAt" and name != "CrBy" and name != "UpAt" and name != "UpBy"):
-        writeData.write("\t@Size(max=")
-        writeData.write(columnType[i].split("(")[1] + ")\n")
-    #print(columnTypeCk)
-    if columnTypeCk == "int" or columnTypeCk == "smallint" or columnTypeCk == "bigint":
-        writeData.write("\tprivate Integer " + ''.join([name[0].lower() + name[1:]]) + ";\n")
-    elif columnTypeCk == "tinyint":
-        writeData.write("\tprivate Boolean " + ''.join([name[0].lower() + name[1:]]) + ";\n")
-    elif columnTypeCk == "float":
-        writeData.write("\tprivate Float " + ''.join([name[0].lower() + name[1:]]) + ";\n")
-    elif columnTypeCk == "double" or columnTypeCk == "amount":
-        writeData.write("\tprivate Float " + ''.join([name[0].lower() + name[1:]]) + ";\n")
-    elif columnTypeCk == "date":
-        if (name != "CrAt" and name != "CrBy" and name != "UpAt" and name != "UpBy"):
-            writeData.write("\tprivate Date " + ''.join([name[0].lower() + name[1:]]) + ";\n")
-    else:
-        if (name != "CrAt" and name != "CrBy" and name != "UpAt" and name != "UpBy"):
-            writeData.write("\tprivate String "+''.join([name[0].lower()+name[1:]])+";\n")
-
-    i=i+1;
-
-writeData.write("}")
-writeData.close()
-
-
-
-i=0
-print("convert get data into spring boot pojo")
-seperator = " "
-# writeData = open("output/"+className+"Pojo.java", 'w+')
-writeData = open(path + "/dao/" + className + "Pojo.java", 'w+')
-idSet = 0
-writeData.write("package com."+pn+".use_cases."+moduleName+"."+folderName+".dao;\n\n")
-writeData.write("public interface "+className+"Pojo {\n")
-for name in columnName:
-    if idSet == 0 and name == "ID" or name == "(Id" :
-        idSet = 1
-        if name == "(Id" :
-            name = name.split('(')[1]
-    columnTypeCk = columnType[i].split("(")[0]
-    #print(columnTypeCk)
-    if columnTypeCk == "int" or columnTypeCk == "smallint" or columnTypeCk == "bigint":
-        writeData.write("\tInteger get"+name+"();\n")
-    elif columnTypeCk == "tinyint":
-        if (name != "IsActive"):
-            writeData.write("\tBoolean get"+name+"();\n")
-    elif columnTypeCk == "float":
-        writeData.write("\tFloat get" + name + "();\n")
-    elif columnTypeCk == "double" or columnTypeCk == "amount":
-        writeData.write("\tFloat get"+name+"();\n")
-    elif columnTypeCk == "date":
-        if (name != "CrAt" and name != "CrBy" and name != "UpAt" and name != "UpBy"):
-            writeData.write("\tDate get"+name+"();\n")
-    else:
-        if (name != "CrAt" and name != "CrBy" and name != "UpAt" and name != "UpBy"):
-            writeData.write("\tString get"+name+"();\n")
-    i=i+1;
-
-writeData.write("}")
-writeData.close()
