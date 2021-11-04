@@ -4,7 +4,7 @@ import re
 pn = "itz.scs" #Project Name
 tableName = "CompanyService"
 moduleName = "company_module"
-cstQry = 0
+cstQry = 1
 # Should be underscore snake_case
 folderName = '_'.join([x.lower() for x in re.findall('[A-Z][^A-Z]*', tableName)])
 
@@ -312,7 +312,7 @@ writeData.write("import org.springframework.http.ResponseEntity;\nimport javax.s
 writeData.write("import org.springframework.http.HttpStatus;\nimport org.modelmapper.ModelMapper;\nimport org.modelmapper.TypeToken;\n")
 writeData.write("import com."+pn+".helpers.common.results.*;\nimport com."+pn+".helpers.common.token.*;\n")
 writeData.write("import com."+pn+".use_cases."+moduleName+"."+folderName+".dao.*;\n")
-writeData.write("import com."+pn+".persistence.models." + modelName + ";\n\n")
+writeData.write("import com."+pn+".persistence.models."+moduleName+"."+modelName+";\n\n")
 writeData.write("@RestController\n@RequestMapping(\"${spring.base.path}\")\n")
 writeData.write("public class " + className + "Controller {\n")
 writeData.write("\n")
@@ -361,7 +361,6 @@ writeData.write("\t\tif(setVal!=null){\n")
 writeData.write("\t\t\tif(!setVal.get"+list(uk.keys())[0]+"().equals(getVal.get"+list(uk.keys())[0]+"()) && ser.getPk2(getVal.get"+list(uk.keys())[0]+"())!=null)\n")
 writeData.write("\t\t\t\tthrow new Exception(getVal.get"+list(uk.keys())[0]+"()+\" Value Already Set\");\n")
 writeData.write("\t\t\tsetVal.setUpBy(claimsDao.getUsr());\n")
-writeData.write("\t\t\tsetVal.setIsActive(getVal.getIsActive());\n")
 writeData.write("\t\t\tsetVal.set"+list(uk.keys())[0]+"(getVal.get"+list(uk.keys())[0]+"());\n")
 writeData.write("\t\t\tsetVal.setDescription(getVal.getDescription());\n")
 writeData.write("\t\t\tser.setData(setVal);\n")
@@ -408,20 +407,26 @@ writeData.write("\t\tlong totalCount = 0;\n")
 writeData.write("\t\tif(isPagination){\n")
 if cstQry == 1 :
     writeData.write("\t\t\tPage<"+modelName+"CstPojo> getAllWtPg = ser.getAllDataByPg(pageNumber-1,pageSize-(pageNumber-1),searchKey);\n")
+    writeData.write("\t\t\ttotalCount = getAllWtPg.getTotalElements();\n")
+    writeData.write("\t\t\treturn new ResponseEntity<>(new ResultsDao(getAllWtPg.getContent(),pageNumber,pageSize,totalCount), HttpStatus.OK);\n")
 else:
     writeData.write("\t\t\tPage<"+modelName+"> getAllWtPg = ser.getAllDataByPg(pageNumber-1,pageSize-(pageNumber-1),searchKey);\n")
+    writeData.write("\t\t\tgetVal = getAllWtPg.getContent();\n")
+    writeData.write("\t\t\ttotalCount = getAllWtPg.getTotalElements();\n")
+    writeData.write("\t\t\treturn new ResponseEntity<>(new ResultsDao(new ModelMapper().map(getVal,\n")
+    writeData.write("\t\t\t\t\tnew TypeToken<List<"+className+"Dao>>() {\n")
+    writeData.write("\t\t\t\t\t}.getType()),pageNumber,pageSize,totalCount), HttpStatus.OK);\n")
 
-writeData.write("\t\t\tgetVal = getAllWtPg.getContent();\n")
-writeData.write("\t\t\ttotalCount = getAllWtPg.getTotalElements();\n")
 writeData.write("\t\t}else{\n")
 writeData.write("\t\t\tgetVal = ser.getAllData();\n")
 writeData.write("\t\t\ttotalCount = getVal.size();\n")
 writeData.write("\t\t\tpageNumber = 1;\n")
 writeData.write("\t\t\tpageSize= Math.toIntExact(totalCount);\n")
+writeData.write("\t\t\treturn new ResponseEntity<>(new ResultsDao(new ModelMapper().map(getVal,\n")
+writeData.write("\t\t\t\t\tnew TypeToken<List<"+className+"Dao>>() {\n")
+writeData.write("\t\t\t\t\t}.getType()),pageNumber,pageSize,totalCount), HttpStatus.OK);\n")
 writeData.write("\t\t}\n")
-writeData.write("\t\treturn new ResponseEntity<>(new ResultsDao(new ModelMapper().map(getVal,\n")
-writeData.write("\t\t\t\tnew TypeToken<List<"+className+"Dao>>() {\n")
-writeData.write("\t\t\t\t}.getType()),pageNumber,pageSize,totalCount), HttpStatus.OK);\n")
+
 writeData.write("\t}\n")
 writeData.write("}\n")
 
@@ -436,7 +441,9 @@ writeData.write("import org.springframework.data.domain.Page;\n")
 writeData.write("import org.springframework.stereotype.Service;\n")
 writeData.write("import java.util.List;\n")
 writeData.write("import com.itz.scs.helpers.utils.OffsetBasedPageRequest;\n")
-writeData.write("import com."+pn+".persistence.models." + modelName + ";\n")
+writeData.write("import com."+pn+".persistence.models."+moduleName+"."+modelName+";\n")
+if cstQry == 1 :
+    writeData.write("import com."+pn+".use_cases."+moduleName+"."+folderName+".dao."+modelName+"CstPojo;\n")
 writeData.write("\n")
 writeData.write("@Service\n")
 writeData.write("public class "+className+"Service {\n\n")
@@ -528,11 +535,14 @@ writeData.close();
 writeData = open(path + "/" + className + "Repository.java", 'w+')
 
 writeData.write("package com."+pn+".use_cases."+moduleName+"."+folderName+";\n\n")
-writeData.write("import com."+pn+".persistence.models." + modelName + ";\n")
+writeData.write("import com."+pn+".persistence.models."+moduleName+"."+modelName+";\n")
 writeData.write("import org.springframework.data.domain.Page;\n")
 writeData.write("import org.springframework.data.domain.Pageable;\n")
 writeData.write("import org.springframework.data.jpa.repository.JpaRepository;\n")
 writeData.write("import org.springframework.stereotype.Repository;\nimport java.util.List;\n")
+if cstQry == 1 :
+    writeData.write("import com."+pn+".use_cases."+moduleName+"."+folderName+".dao."+modelName+"CstPojo;\nimport org.springframework.data.jpa.repository.Query;\n")
+
 writeData.write("\n")
 writeData.write("@Repository\n")
 writeData.write("public interface "+className+"Repository extends JpaRepository<"+modelName+",Long> {\n")
@@ -540,7 +550,7 @@ writeData.write("\t"+modelName+" findBy"+list(pk.keys())[0]+"("+list(pk.values()
 writeData.write("\t"+modelName+" findBy"+list(uk.keys())[0]+"("+list(uk.values())[0]+" pk0);\n")
 writeData.write("\tList<"+modelName+"> findByIsActive(boolean b);\n")
 if cstQry == 1 :
-    writeData.write("\t@Query(value = "+selectQry+",nativeQuery = true,countQuery = SELECT count(t1.Id) FROM "+selectQry.split("from")[1]+")\n")
+    writeData.write("\t@Query(value = \""+selectQry+"\",nativeQuery = true,countQuery = \"SELECT count(t1.Id) FROM "+selectQry.split("from")[1]+"\")\n")
     writeData.write("\tPage<"+modelName+"CstPojo> findByIsActiveAnd"+list(uk.keys())[0]+"ContainingIgnoreCase(boolean b,String searchKey,Pageable of);\n")
 else:
     writeData.write("\tPage<"+modelName+"> findByIsActiveAnd"+list(uk.keys())[0]+"ContainingIgnoreCase(boolean b,String searchKey,Pageable of);\n")
