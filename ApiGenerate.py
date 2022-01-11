@@ -3,8 +3,8 @@ import re
 #--------------------------------------
 pn = "itz.scs" #Project Name
 tableName = "" #No Need
-moduleName = "recovery_module"
-cstQry = 1
+moduleName = "renewal_module"
+cstQry = 0
 addAllOpt = 0
 delAllOpt = 0
 createdBy = "Abdul Baasit"
@@ -108,8 +108,8 @@ idSet = 0
 splitBy = " "
 writeData = open("output/"+className+".java", 'w+')
 writeData.write("package com." + pn + ".persistence.models;\n")
-writeData.write("import com.itz.scs.helpers.utils.JwtUtil;\n")
-writeData.write("import com.itz.scs.persistence.models.common.Auditable;\n")
+writeData.write("import com." + pn + ".helpers.utils.JwtUtil;\n")
+writeData.write("import com." + pn + ".persistence.models.common.Auditable;\n")
 writeData.write("import lombok.Getter;\nimport lombok.Setter;\nimport javax.persistence.*;\n\n")
 writeData.write("@Entity @Table(name=\"" + tableName + "\") \n")
 writeData.write("@Getter @Setter\n")
@@ -371,9 +371,8 @@ if len(uk) > 0:
     writeData.write("\t\t\tif(!setVal.get" + list(uk.keys())[0] + "().equals(getVal.get" + list(uk.keys())[
         0] + "()) && ser.getPk2(getVal.get" + list(uk.keys())[0] + "())!=null)\n")
     writeData.write("\t\t\t\tthrow new Exception(getVal.get"+list(uk.keys())[0]+"()+\" Value Already Set\");\n")
-    writeData.write("\t\t\tsetVal.setUpBy(claimsDao.getUsr());\n")
     writeData.write("\t\t\tsetVal.set"+list(uk.keys())[0]+"(getVal.get"+list(uk.keys())[0]+"());\n")
-writeData.write("\t\t\tsetVal.setDescription(getVal.getDescription());\n")
+# writeData.write("\t\t\tsetVal.setDescription(getVal.getDescription());\n")
 writeData.write("\t\t\tser.setData(setVal);\n")
 writeData.write("\t\t}else{\n")
 writeData.write("\t\t\tthrow new Exception(\"Value Not Found To Update\");\n")
@@ -401,7 +400,7 @@ writeData.write("\t\tClaimsDao claimsDao = claimsSet.getClaimsDetailsAfterSet(re
 writeData.write("\t\t"+modelName+" getVal = ser.getPk1(id);\n")
 writeData.write("\t\tif(getVal == null)\n")
 writeData.write("\t\t\tthrow new Exception(id+\" Not Found To Get\");\n")
-writeData.write("\t\treturn new ResponseEntity<>(new ResultDao( new ModelMapper().map(getVal, "+className+"Dao.class),\"Car Brand Fetched Successfully\",true), HttpStatus.OK);\n")
+writeData.write("\t\treturn new ResponseEntity<>(new ResultDao( new ModelMapper().map(getVal, "+className+"Dao.class),\"Fetched Successfully\",true), HttpStatus.OK);\n")
 writeData.write("\t}\n\n")
 # Get all
 if len(uk) > 0:
@@ -464,7 +463,7 @@ writeData.write("import org.springframework.beans.factory.annotation.Autowired;\
 writeData.write("import org.springframework.data.domain.Page;\n")
 writeData.write("import org.springframework.stereotype.Service;\n")
 writeData.write("import java.util.List;\n")
-writeData.write("import com.itz.scs.helpers.utils.OffsetBasedPageRequest;\n")
+writeData.write("import com."+pn+".helpers.utils.OffsetBasedPageRequest;\n")
 writeData.write("import com."+pn+".persistence.models."+moduleName+"."+modelName+";\n")
 if cstQry == 1 :
     writeData.write("import com."+pn+".use_cases."+moduleName+"."+folderName+".dao."+modelName+"CstPojo;\n")
