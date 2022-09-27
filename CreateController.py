@@ -4,7 +4,7 @@ import re
 import os
 
 pn = "itz.scs" #Project Name
-tableName = "CarBrand"
+tableName = "MicrobiomeComposition"
 folderName = '_'.join([x.lower() for x in re.findall('[A-Z][^A-Z]*', tableName)])
 modelName = tableName
 className = tableName
@@ -19,8 +19,8 @@ createdBy = "Abdul Baasit"
 #--------------------------------------
 
 
+parent_dir = "D:/DevTools/Automata/SpringBootAutomation/output"
 
-parent_dir = "E:/pycharm/spring-boot-automation/output"
 print("Create a controller , service & repo ")
 
 path = os.path.join(parent_dir, folderName)
@@ -31,8 +31,10 @@ else:
     os.mkdir(path)
 
 print(path)
+# ----------------
+print("Create controller class")
 writeData = open(path + "/" + className + "Controller.java", 'w+')
-
+#Create a Controller
 writeData.write("package com."+pn+".use_cases."+folderName+";\n\n")
 writeData.write("import org.springframework.data.domain.Page;\nimport org.springframework.web.bind.annotation.*;\nimport org.springframework.beans.factory.annotation.Autowired;\n")
 writeData.write("import org.springframework.http.ResponseEntity;\nimport javax.servlet.http.HttpServletRequest;\nimport java.util.List;\n")

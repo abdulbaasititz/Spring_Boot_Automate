@@ -1,10 +1,10 @@
 import re
 #Convert query to model
 #--------------------------------------
-pn = "itz.scs" #Project Name
-tableName = "TrafficFineCharges" #No Need
-moduleName = "gutgomics_module"
-cstQry = 1
+pn = "itz.base" #Project Name
+tableName = "" #No Need
+moduleName = "test_module"
+cstQry = 0
 addAllOpt = 1
 delAllOpt = 1
 createdBy = "Abdul Baasit"
@@ -126,6 +126,9 @@ for name in columnName:
             name = name.split('(')[1]
     columnTypeCk = columnType[i].split("(")[0]
     #print(columnTypeCk)
+    if len(columnType[i].split("(")) > 1:
+       writeData.write("\t@Size(max=")
+       writeData.write(columnType[i].split("(")[1] + ")\n")
     if columnTypeCk == "int" or columnTypeCk == "smallint" or columnTypeCk == "bigint":
         if idSet == 1:
             writeData.write("\tprivate Integer " + ''.join([name[0].lower() + name[1:]]) + " = 0;\n")
@@ -327,6 +330,7 @@ writeData.write("import com."+pn+".persistence.models."+moduleName+"."+modelName
 writeData.write("@RestController\n@RequestMapping(\"${spring.base.path}\")\n")
 writeData.write("public class " + className + "Controller {\n")
 writeData.write("\n")
+
 # Add a Annotation
 writeData.write("\t@Autowired\n")
 writeData.write("\t" + className + "Service ser;\n")

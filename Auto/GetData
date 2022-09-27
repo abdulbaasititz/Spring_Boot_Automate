@@ -1,0 +1,4 @@
+CREATE TABLE MicrobiomeComposition (Id int(11) NOT NULL AUTO_INCREMENT,
+ McDivisionId int(11) NOT NULL, Species varchar(255) NOT NULL UNIQUE, Abundance varchar(255),
+  Level varchar(255), IsActive tinyint(1) DEFAULT 1, CrAt timestamp NOT NULL, CrBy varchar(16) NOT NULL,
+  UpAt timestamp NULL, UpBy varchar(16), PRIMARY KEY (Id));
